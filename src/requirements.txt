@@ -1,5 +1,6 @@
-streamlit
-inngest
-boto3
-requests
-python-dotenv
+# Streamlit frontend on EC2
+streamlit==1.65.0
+inngest==0.5.19
+boto3==1.43.113
+requests==2.34.2
+python-dotenv==1.2.4

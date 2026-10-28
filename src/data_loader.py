@@ -1,51 +1,89 @@
-from dotenv import load_dotenv
-from llama_index.readers.file import PDFReader
-from llama_index.core.node_parser import SentenceSplitter
-from openai import OpenAI
 import os
+
 import boto3
+from dotenv import load_dotenv
+from fastembed import TextEmbedding
+from pypdf import PdfReader
 
 load_dotenv()
 
-import os
-import boto3
-
-s3 = boto3.client("s3")
 S3_BUCKET = os.getenv("S3_BUCKET")
+
+# Local embedding model: no API key, runs inside Lambda. The Dockerfile bakes
+# the weights into FASTEMBED_CACHE so cold starts never hit the network.
+EMBED_MODEL = "BAAI/bge-small-en-v1.5"
+EMBED_DIM = 384
+FASTEMBED_CACHE = os.getenv("FASTEMBED_CACHE")
+
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 200
+MAX_PAGES = 50
+MAX_CHUNKS = 300
+
+_s3 = None
+def get_s3():
+    global _s3
+    if _s3 is None:
+        _s3 = boto3.client("s3")
+    return _s3
 
 
 def download_pdf_from_s3(s3_key: str) -> str:
     local_path = os.path.join("/tmp", os.path.basename(s3_key))
-    s3.download_file(S3_BUCKET, s3_key, local_path)
+    get_s3().download_file(S3_BUCKET, s3_key, local_path)
     return local_path
 
-EMBED_MODEL = "text-embedding-3-small"
-EMBED_DIM = 1536
 
-splitter = SentenceSplitter(chunk_size=1000, chunk_overlap=200)
+def delete_pdf_from_s3(s3_key: str) -> None:
+    get_s3().delete_object(Bucket=S3_BUCKET, Key=s3_key)
 
-def load_and_chunk_pdf(path: str):
-    docs = PDFReader().load_data(file=path)
-    texts = [d.text for d in docs if getattr(d, "text", None)]
+
+def split_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
+    text = " ".join(text.split())
     chunks = []
-    for t in texts:
-        chunks.extend(splitter.split_text(t))
+    start = 0
+    while start < len(text):
+        end = min(start + size, len(text))
+        # Prefer to break on a sentence or word boundary inside the window
+        if end < len(text):
+            cut = max(text.rfind(". ", start, end), text.rfind(" ", start, end))
+            if cut > start + size // 2:
+                end = cut + 1
+        chunks.append(text[start:end].strip())
+        if end == len(text):
+            break
+        start = max(end - overlap, start + 1)
+    return [c for c in chunks if c]
+
+
+def load_and_chunk_pdf(path: str) -> list[str]:
+    with open(path, "rb") as f:
+        if f.read(5) != b"%PDF-":
+            raise ValueError("Not a PDF file")
+    reader = PdfReader(path)
+    if len(reader.pages) > MAX_PAGES:
+        raise ValueError(f"PDF has more than {MAX_PAGES} pages")
+    chunks = []
+    for page in reader.pages:
+        chunks.extend(split_text(page.extract_text() or ""))
+        if len(chunks) >= MAX_CHUNKS:
+            return chunks[:MAX_CHUNKS]
     return chunks
 
 
+_model = None
+def get_model() -> TextEmbedding:
+    # Created lazily so importing this module stays cheap
+    global _model
+    if _model is None:
+        _model = TextEmbedding(EMBED_MODEL, cache_dir=FASTEMBED_CACHE)
+    return _model
 
-_client = None
-def get_client() -> OpenAI:
-    # Created lazily so the app still starts when OPENAI_API_KEY is missing
-    global _client
-    if _client is None:
-        _client = OpenAI()
-    return _client
 
 def embed_texts(texts: list[str]) -> list[list[float]]:
-    response = get_client().embeddings.create(
-        model=EMBED_MODEL,
-        input=texts,
-        dimensions=EMBED_DIM,
-    )
-    return [d.embedding for d in response.data]
+    return [v.tolist() for v in get_model().embed(texts)]
+
+
+def embed_query(text: str) -> list[float]:
+    # bge models expect a query prefix; query_embed adds it
+    return next(iter(get_model().query_embed(text))).tolist()

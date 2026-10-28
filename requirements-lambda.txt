@@ -1,11 +1,9 @@
-fastapi
-uvicorn
-inngest
-mangum
-qdrant-client
-llama-index-readers-file
-llama-index-core
-python-dotenv
-pydantic
-boto3
-openai
+# Lambda backend. boto3 comes preinstalled in the Lambda base image.
+fastapi==0.143.0
+inngest==0.5.19
+mangum==0.22.0
+pydantic==2.14.1
+python-dotenv==1.2.4
+qdrant-client==1.19.1
+fastembed==0.9.0
+pypdf==6.20.1

@@ -13,3 +13,9 @@ qdrant_storage/
 __pycache__/
 .idea/
 *.swp
+
+*.pem
+.env*
+!.env.example
+ec2-user@*/
+venv/

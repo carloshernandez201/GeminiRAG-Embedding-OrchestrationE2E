@@ -10,9 +10,9 @@ class RAGUpsertResult(pydantic.BaseModel):
 class RAGSearchResult(pydantic.BaseModel):
     contexts: list[str]
     sources: list[str]
+    scores: list[float] = []
     failed: bool = False
 
 class RAGQueryResult(pydantic.BaseModel):
-    answer: str
-    sources: list[str]
+    passages: list[dict]
     num_contexts: int

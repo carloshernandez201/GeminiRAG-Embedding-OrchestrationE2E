@@ -1,0 +1,14 @@
+[server]
+maxUploadSize = 10
+enableXsrfProtection = true
+enableCORS = true
+address = "127.0.0.1"
+port = 8501
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "viewer"
+showErrorDetails = false

@@ -1,0 +1,12 @@
+.env
+.env*
+*.pem
+venv/
+ec2-user@*/
+uploads/
+qdrant_storage/
+.git/
+.idea/
+__pycache__/
+tests/
+notes/

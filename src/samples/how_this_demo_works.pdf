@@ -1,0 +1,149 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 2591 >>
+stream
+BT
+15 TL
+56 750 Td
+/F1 16 Tf
+(How this demo works) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(This app is a retrieval-augmented search engine for PDFs. You upload a PDF from the) Tj
+T*
+/F1 11 Tf
+(Streamlit frontend, which runs on an AWS EC2 instance behind a Caddy reverse proxy that) Tj
+T*
+/F1 11 Tf
+(provides HTTPS.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(The frontend uploads the file to a private Amazon S3 bucket under a folder named after) Tj
+T*
+/F1 11 Tf
+(your browser session, then sends an ingest event to Inngest. Inngest is a workflow) Tj
+T*
+/F1 11 Tf
+(orchestration service: it invokes the backend, retries failed steps, and records every) Tj
+T*
+/F1 11 Tf
+(run.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(The backend is a FastAPI application packaged as a Docker image and deployed to AWS) Tj
+T*
+/F1 11 Tf
+(Lambda. The ingest workflow downloads the PDF, deletes it from S3 immediately, extracts) Tj
+T*
+/F1 11 Tf
+(the text with pypdf, and splits it into overlapping chunks of about one thousand) Tj
+T*
+/F1 11 Tf
+(characters.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(Each chunk is turned into a 384-dimensional embedding by the bge-small-en-v1.5 model,) Tj
+T*
+/F1 11 Tf
+(which runs locally inside Lambda through the fastembed library. No paid API key is used) Tj
+T*
+/F1 11 Tf
+(anywhere in the pipeline. The embeddings are stored in a Qdrant vector database tagged) Tj
+T*
+/F1 11 Tf
+(with your session id.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(When you ask a question, the query workflow embeds your question with the same model and) Tj
+T*
+/F1 11 Tf
+(asks Qdrant for the closest chunks, filtered to your session only. Other visitors can) Tj
+T*
+/F1 11 Tf
+(never see your documents. The best matching passages are returned with a cosine) Tj
+T*
+/F1 11 Tf
+(similarity score.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(Privacy: uploaded files are deleted from S3 as soon as they are processed, and an) Tj
+T*
+/F1 11 Tf
+(Inngest cron job runs every fifteen minutes to delete any vectors older than one hour.) Tj
+T*
+/F1 11 Tf
+(An S3 lifecycle rule acts as a backstop and expires anything left in the uploads folder) Tj
+T*
+/F1 11 Tf
+(after one day.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(Security: the EC2 instance uses an IAM role instead of stored access keys, Streamlit) Tj
+T*
+/F1 11 Tf
+(only listens on localhost, Lambda concurrency is capped, and uploads are limited to ten) Tj
+T*
+/F1 11 Tf
+(megabytes and fifty pages.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(Try asking: Where is my PDF stored? What embedding model is used? How long is my data) Tj
+T*
+/F1 11 Tf
+(kept? What does Inngest do?) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2954
+%%EOF
