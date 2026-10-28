@@ -1,0 +1,15 @@
+.env
+src/ragapp.pem
+.env
+uploads/
+qdrant_storage/
+__pycache__/
+.idea/
+*.swp
+
+.env
+uploads/
+qdrant_storage/
+__pycache__/
+.idea/
+*.swp
