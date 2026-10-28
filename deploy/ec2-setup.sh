@@ -6,6 +6,10 @@ DOMAIN="${1:?usage: sudo bash ec2-setup.sh <your-domain>}"
 REPO=https://github.com/carloshernandez201/GeminiRAG-Embedding-OrchestrationE2E.git
 APP=/opt/rag-app
 CADDY_VERSION=2.10.0
+REGION="$(TOKEN=$(curl -fsS -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 60'); \
+  curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/region)"
+
+grep -q 'Amazon Linux.*2023' /etc/os-release || { echo "This script expects Amazon Linux 2023"; exit 1; }
 
 echo "== Packages + automatic security updates"
 dnf -y -q install git python3.12 dnf-automatic
@@ -31,7 +35,7 @@ INNGEST_EVENT_KEY=$EK
 INNGEST_SIGNING_KEY=$SK
 INNGEST_API_BASE=https://api.inngest.com/v1
 S3_BUCKET=$BUCKET
-AWS_DEFAULT_REGION=us-east-1
+AWS_DEFAULT_REGION=$REGION
 ENV
 fi
 

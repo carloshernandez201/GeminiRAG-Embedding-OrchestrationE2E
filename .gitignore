@@ -19,3 +19,4 @@ __pycache__/
 !.env.example
 ec2-user@*/
 venv/
+deploy/config.local.sh
